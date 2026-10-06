@@ -50,19 +50,20 @@ Temporary add-ons are removed when Firefox restarts. To install it permanently, 
 
 ```bash
 npm install
-npm run build      # builds both extensions: dist/firefox and dist/chrome
+npm run build      # builds both extensions into dist/firefox and dist/chrome, then zips each
 npm run build:firefox / build:chrome   # one browser only
 npm run dev        # rebuilds the Firefox build on change; click "Reload" in about:debugging
 npm run dev:chrome # same for Chrome; click the reload icon in chrome://extensions
 npm test           # unit tests (test/*.test.ts), then the extractor smoke run on test/fixture.html
 npx vite           # runs the sidebar UI in a normal browser with demo data
-npm run zip        # packages schema-breeze-firefox.zip and schema-breeze-chrome.zip
+npm run zip        # re-zips dist/ without rebuilding (zip:firefox / zip:chrome for one)
+npm run release    # cuts a release from main (see Releasing below); release:check only previews it
 npm run icons      # re-renders the Chrome PNG icons from icons/icon.svg (needs ImageMagick)
 ```
 
 One codebase feeds both browsers. The differences are confined to:
 
-- **The manifest.** `manifest/base.json` holds what's shared; `manifest/firefox.json` and `manifest/chrome.json` add each browser's keys (sidebar vs. side panel, background script vs. service worker, Gecko settings, SVG vs. PNG icons). The build merges them and takes `version` from `package.json`, so that's the only place to bump it.
+- **The manifest.** `manifest/base.json` holds what's shared; `manifest/firefox.json` and `manifest/chrome.json` add each browser's keys (sidebar vs. side panel, background script vs. service worker, Gecko settings, SVG vs. PNG icons). The build merges them and takes `version` from `package.json`, so that's the only place the version lives. `npm run release` bumps it; don't edit it by hand.
 - **The API namespace.** `src/lib/browser.ts` and `public/background.js` use `browser` in Firefox and `chrome` in Chrome. Chrome's MV3 calls return promises, so the same code works in both.
 - **Opening the panel.** Firefox toggles the sidebar from the toolbar button; Chrome opens the side panel through `sidePanel.setPanelBehavior`.
 
@@ -82,12 +83,35 @@ Built with React, Mantine 9 (custom "lagoon" teal theme with navy-tinted dark mo
 | `src/lib/validate.ts` | SEO rules, vocabulary checks and the visible-content check. Add types to `RULES`; subtypes inherit rules through the vocabulary |
 | `src/lib/vocab.ts` | Lookups over the bundled schema.org vocabulary |
 | `src/lib/visible.ts` | Text and number matching against the page's visible text |
+| `src/components/*` | Graph, Tree, Issues, Raw and EntityDetail views |
+| `scripts/release.ts`, `scripts/semver.ts` | The release script and its version logic |
 | `vocab/schemaorg-all-https.jsonld` | The pinned schema.org vocabulary. `scripts/build-vocab.ts` turns it into `src/lib/vocab.json` before every build, dev and test run |
 
 ### Updating the schema.org vocabulary
 
 Download the latest `schemaorg-all-https.jsonld` from [schema.org/docs/developers.html](https://schema.org/docs/developers.html), replace `vocab/schemaorg-all-https.jsonld`, and rebuild. Use the "all" file, not "current": it includes the attic terms, which the extension reports as retired. The build fails if the file is missing or malformed.
-| `src/components/*` | Graph, Tree, Issues, Raw and EntityDetail views |
+
+### Releasing
+
+Versions follow [semver](https://semver.org) and each release is tagged `vX.Y.Z` on `main`. `npm run build` ends with a one-line reminder when `main` has unreleased changes.
+
+From an up-to-date, clean `main`, run `npm run release`. It suggests the next version from what was merged since the last tag:
+
+| Since the last tag | Bump |
+|---|---|
+| A breaking change: a `feat!/…` branch, a `feat!:` commit, or `BREAKING CHANGE` in a commit body | major (minor below 1.0.0) |
+| A merged `feat/…` branch or `feat:` commit | minor |
+| Anything else that changes the packaged extension (`src`, `public`, `manifest`, `vocab`, dependencies) | patch |
+| Only tests, docs or tooling | no release needed |
+
+Accept the suggestion or type `patch`, `minor`, `major` or an exact version. Going to 1.0.0 is always your call. The script then bumps `package.json`, runs the tests, builds and zips, commits `Release vX.Y.Z`, and tags it with notes grouped into Features, Fixes and Other. It asks before each step that leaves your machine:
+
+1. push `main` and the tag;
+2. create a GitHub release with both zips attached;
+3. upload to the Chrome Web Store and submit it for review;
+4. submit to Firefox Add-ons (AMO) for review, with `schema-breeze-source.zip` (a `git archive` of the tag) as the readable source AMO requires for bundled code.
+
+The store steps need credentials. Copy `.env.release.example` to `.env.release` (gitignored) and fill it in; a store whose values are missing is skipped. Anything skipped or failed is listed at the end. To retry just the store uploads later, check out the release tag and run `npm run release -- --stores`. The first submission to each store has to be made by hand in its dashboard; the script only handles updates. Both stores review every update, so a release goes live after review, not immediately.
 
 ## License
 
