@@ -4,7 +4,7 @@ import {
   Tooltip, useMantineColorScheme, useComputedColorScheme,
 } from '@mantine/core';
 import {
-  IconAlertTriangle, IconBinaryTree2, IconBraces, IconDownload, IconExternalLink, IconGraph, IconLock, IconMoon,
+  IconAlertTriangle, IconBinaryTree2, IconBraces, IconChecklist, IconDownload, IconExternalLink, IconGraph, IconLock, IconMoon,
   IconRefresh, IconSun, IconWorldOff,
 } from '@tabler/icons-react';
 import { buildGraph, toJsonLd } from './lib/graph';
@@ -321,6 +321,7 @@ function Header({ page, onRefresh, graphReady, onExportJson }: { page: PageData 
   const { setColorScheme } = useMantineColorScheme();
   const scheme = useComputedColorScheme('light');
   const enc = encodeURIComponent(page?.url ?? '');
+  const [validateOpen, setValidateOpen] = useState(false);
 
   return (
     <Group justify="space-between" wrap="nowrap" px="xs" py={8} gap={6}>
@@ -338,18 +339,20 @@ function Header({ page, onRefresh, graphReady, onExportJson }: { page: PageData 
             <IconRefresh size={16} />
           </ActionIcon>
         </Tooltip>
-        <Menu position="bottom-end" withinPortal shadow="md">
-          <Menu.Target>
-            <ActionIcon aria-label="Export and validators" disabled={!page}>
-              <IconDownload size={16} />
-            </ActionIcon>
-          </Menu.Target>
+        <Tooltip label="Download merged graph (.jsonld)">
+          <ActionIcon aria-label="Download merged graph (.jsonld)" disabled={!graphReady} onClick={onExportJson}>
+            <IconDownload size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Menu position="bottom-end" withinPortal shadow="md" opened={validateOpen} onChange={setValidateOpen}>
+          <Tooltip label="Validate in an external tool" disabled={validateOpen}>
+            <Menu.Target>
+              <ActionIcon aria-label="Validate in an external tool" disabled={!page}>
+                <IconChecklist size={16} />
+              </ActionIcon>
+            </Menu.Target>
+          </Tooltip>
           <Menu.Dropdown>
-            <Menu.Label>Export</Menu.Label>
-            <Menu.Item disabled={!graphReady} onClick={onExportJson}>
-              Merged graph (.jsonld)
-            </Menu.Item>
-            <Menu.Divider />
             <Menu.Label>Validate this URL</Menu.Label>
             <Menu.Item rightSection={<IconExternalLink size={12} />} onClick={() => openTab(`https://validator.schema.org/#url=${enc}`)}>
               Schema Markup Validator
