@@ -11,7 +11,7 @@ test('Firefox gets a sidebar, a background script and the Gecko settings', () =>
   assert.ok(m.commands._execute_sidebar_action);
   assert.ok(m.browser_specific_settings.gecko.id);
   assert.equal(m.side_panel, undefined);
-  assert.deepEqual(m.permissions, ['scripting', 'tabs', 'activeTab']);
+  assert.deepEqual(m.permissions, ['scripting', 'tabs']);
 });
 
 test('Chrome gets a side panel, a service worker and PNG icons, and nothing Gecko-only', () => {
@@ -20,7 +20,7 @@ test('Chrome gets a side panel, a service worker and PNG icons, and nothing Geck
   assert.deepEqual(m.background, { service_worker: 'background.js' });
   assert.equal(m.side_panel.default_path, 'sidebar.html');
   assert.ok(m.commands._execute_action);
-  assert.deepEqual(m.permissions, ['scripting', 'tabs', 'activeTab', 'sidePanel']);
+  assert.deepEqual(m.permissions, ['scripting', 'tabs', 'sidePanel']);
   assert.equal(m.action.default_title, 'Toggle Schema Breeze', 'base keys survive the merge');
   for (const key of ['sidebar_action', 'browser_specific_settings']) assert.equal(m[key], undefined, key);
   for (const path of [...Object.values(m.icons), ...Object.values(m.action.default_icon)]) assert.match(String(path), /\.png$/);

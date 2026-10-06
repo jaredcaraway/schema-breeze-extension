@@ -4,8 +4,7 @@
   "description": "Visualize structured data (JSON-LD, Microdata, RDFa) on any page as an entity graph, with SEO-focused validation.",
   "permissions": [
     "scripting",
-    "tabs",
-    "activeTab"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"

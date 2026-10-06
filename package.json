@@ -11,14 +11,21 @@
     "predev:chrome": "npm run vocab",
     "dev:chrome": "TARGET=chrome vite build --watch",
     "build": "npm run build:firefox && npm run build:chrome",
+    "postbuild": "tsx scripts/release.ts --quiet || true",
     "prebuild:firefox": "npm run vocab",
     "build:firefox": "TARGET=firefox vite build",
+    "postbuild:firefox": "npm run zip:firefox",
     "prebuild:chrome": "npm run vocab",
     "build:chrome": "TARGET=chrome vite build",
+    "postbuild:chrome": "npm run zip:chrome",
     "icons": "for s in 16 32 48 128; do magick -background none -density 600 public/icons/icon.svg -resize ${s}x${s} public/icons/icon-$s.png; done",
     "pretest": "npm run vocab",
     "test": "tsx --test test/*.test.ts && tsx test/run.ts",
-    "zip": "for t in firefox chrome; do (cd dist/$t && zip -qr ../../schema-breeze-$t.zip .); done"
+    "zip": "npm run zip:firefox && npm run zip:chrome",
+    "zip:firefox": "rm -f schema-breeze-firefox.zip && cd dist/firefox && zip -qr ../../schema-breeze-firefox.zip .",
+    "zip:chrome": "rm -f schema-breeze-chrome.zip && cd dist/chrome && zip -qr ../../schema-breeze-chrome.zip .",
+    "release": "tsx scripts/release.ts",
+    "release:check": "tsx scripts/release.ts --check"
   },
   "dependencies": {
     "@mantine/core": "^9.6.3",
@@ -34,9 +41,11 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "chrome-webstore-upload-cli": "^4.0.2",
     "jsdom": "^29.1.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "web-ext": "^10.7.0"
   }
 }

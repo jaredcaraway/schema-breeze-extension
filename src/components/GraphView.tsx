@@ -6,6 +6,8 @@ import { IconFocusCentered, IconPhotoDown } from '@tabler/icons-react';
 import type { Graph } from '../lib/types';
 import { colorForType } from '../theme';
 import { download } from '../lib/browser';
+import { isPaid } from '../lib/plan';
+import { finishExport } from '../lib/watermark';
 import { separate } from '../lib/overlap';
 import { leftToRightTree } from '../lib/tree';
 
@@ -190,11 +192,12 @@ export function GraphView({ graph, selected, onSelect, issueIds, fileStem }: Pro
     cy.animate({ center: { eles: n }, duration: 200 });
   }, [selected, elements]);
 
-  const exportPng = () => {
+  const exportPng = async () => {
     const cy = cyRef.current;
     if (!cy) return;
-    const blob = cy.png({ output: 'blob', full: true, scale: 2, bg: dark ? '#111723' : '#ffffff' }) as unknown as Blob;
-    download(`${fileStem}-graph.png`, blob);
+    const background = dark ? '#111723' : '#ffffff';
+    const blob = cy.png({ output: 'blob', full: true, scale: 2, bg: background }) as unknown as Blob;
+    download(`${fileStem}-graph.png`, await finishExport(blob, { dark, background, paid: isPaid() }));
   };
 
   return (

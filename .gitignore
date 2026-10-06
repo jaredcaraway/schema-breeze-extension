@@ -5,3 +5,4 @@ web-ext-artifacts/
 *.xpi
 .DS_Store
 src/lib/vocab.json
+.env.release
