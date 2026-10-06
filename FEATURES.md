@@ -1,6 +1,6 @@
 # Feature Roadmap
 
-Candidate features to make Entity Viewer useful to SEOs and developers beyond personal use. Ordered by priority. Current state: v0.2.0 (v0.1.1 signed unlisted on AMO) (see README for what exists today).
+Candidate features to make Schema Breeze useful to SEOs and developers beyond personal use. Ordered by priority. Current state: v0.2.0 (v0.1.1 signed unlisted on AMO) (see README for what exists today).
 
 **Done:** full vocabulary validation (1.1), the page-content mismatch check (1.3) and block provenance (2.3). See `docs/superpowers/specs/2026-10-02-vocab-and-mismatch-validation-design.md`. **Next:** rich-result eligibility verdicts (1.2).
 

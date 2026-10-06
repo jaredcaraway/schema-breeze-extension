@@ -1,4 +1,4 @@
-# Entity Viewer
+# Schema Breeze
 
 A Firefox and Chrome sidebar extension that finds the structured data on a page and shows it as an entity graph. It reads JSON-LD, Microdata and RDFa, merges nodes that share an `@id` across blocks, and flags SEO problems.
 
@@ -7,7 +7,7 @@ A Firefox and Chrome sidebar extension that finds the structured data on a page 
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on…** and select `entity-viewer-firefox.zip`, or `dist/firefox/manifest.json` if you built from source.
+2. Click **Load Temporary Add-on…** and select `schema-breeze-firefox.zip`, or `dist/firefox/manifest.json` if you built from source.
 3. Click the toolbar icon or press **Alt+Shift+E** to open the sidebar.
 4. The first time, click **Grant access to websites**. Firefox treats host access as opt-in for Manifest V3 extensions.
 
@@ -56,7 +56,7 @@ npm run dev        # rebuilds the Firefox build on change; click "Reload" in abo
 npm run dev:chrome # same for Chrome; click the reload icon in chrome://extensions
 npm test           # unit tests (test/*.test.ts), then the extractor smoke run on test/fixture.html
 npx vite           # runs the sidebar UI in a normal browser with demo data
-npm run zip        # packages entity-viewer-firefox.zip and entity-viewer-chrome.zip
+npm run zip        # packages schema-breeze-firefox.zip and schema-breeze-chrome.zip
 npm run icons      # re-renders the Chrome PNG icons from icons/icon.svg (needs ImageMagick)
 ```
 

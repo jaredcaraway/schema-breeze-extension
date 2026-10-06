@@ -28,7 +28,7 @@
       "suggested_key": {
         "default": "Alt+Shift+E"
       },
-      "description": "Toggle the Entity Viewer side panel"
+      "description": "Toggle the Schema Breeze side panel"
     }
   }
 }
