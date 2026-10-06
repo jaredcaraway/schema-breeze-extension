@@ -21,7 +21,7 @@ test('Chrome gets a side panel, a service worker and PNG icons, and nothing Geck
   assert.equal(m.side_panel.default_path, 'sidebar.html');
   assert.ok(m.commands._execute_action);
   assert.deepEqual(m.permissions, ['scripting', 'tabs', 'activeTab', 'sidePanel']);
-  assert.equal(m.action.default_title, 'Toggle Entity Viewer', 'base keys survive the merge');
+  assert.equal(m.action.default_title, 'Toggle Schema Breeze', 'base keys survive the merge');
   for (const key of ['sidebar_action', 'browser_specific_settings']) assert.equal(m[key], undefined, key);
   for (const path of [...Object.values(m.icons), ...Object.values(m.action.default_icon)]) assert.match(String(path), /\.png$/);
 });

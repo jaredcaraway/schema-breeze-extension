@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Entity Viewer",
+  "name": "Schema Breeze",
   "description": "Visualize structured data (JSON-LD, Microdata, RDFa) on any page as an entity graph, with SEO-focused validation.",
   "permissions": [
     "scripting",
@@ -11,6 +11,6 @@
     "<all_urls>"
   ],
   "action": {
-    "default_title": "Toggle Entity Viewer"
+    "default_title": "Toggle Schema Breeze"
   }
 }

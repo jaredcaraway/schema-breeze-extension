@@ -1,5 +1,5 @@
 {
-  "name": "entity-viewer",
+  "name": "schema-breeze-extension",
   "version": "0.2.0",
   "private": true,
   "license": "MIT",
@@ -18,7 +18,7 @@
     "icons": "for s in 16 32 48 128; do magick -background none -density 600 public/icons/icon.svg -resize ${s}x${s} public/icons/icon-$s.png; done",
     "pretest": "npm run vocab",
     "test": "tsx --test test/*.test.ts && tsx test/run.ts",
-    "zip": "for t in firefox chrome; do (cd dist/$t && zip -qr ../../entity-viewer-$t.zip .); done"
+    "zip": "for t in firefox chrome; do (cd dist/$t && zip -qr ../../schema-breeze-$t.zip .); done"
   },
   "dependencies": {
     "@mantine/core": "^9.6.3",

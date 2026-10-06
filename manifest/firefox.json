@@ -5,7 +5,7 @@
     ]
   },
   "sidebar_action": {
-    "default_title": "Entity Viewer",
+    "default_title": "Schema Breeze",
     "default_panel": "sidebar.html",
     "default_icon": "icons/icon.svg",
     "open_at_install": false
@@ -15,7 +15,7 @@
       "suggested_key": {
         "default": "Alt+Shift+E"
       },
-      "description": "Toggle the Entity Viewer sidebar"
+      "description": "Toggle the Schema Breeze sidebar"
     }
   },
   "browser_specific_settings": {

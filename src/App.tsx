@@ -152,7 +152,7 @@ export function App() {
       {status === 'permission' && (
         <Empty icon={<IconLock size={22} />} title="Allow page access">
           <Text size="sm" c="dimmed" ta="center">
-            Entity Viewer reads structured data from the pages you view. {BROWSER_NAME} needs your OK first. Nothing leaves your browser.
+            Schema Breeze reads structured data from the pages you view. {BROWSER_NAME} needs your OK first. Nothing leaves your browser.
           </Text>
           <Button
             size="xs"
@@ -326,7 +326,7 @@ function Header({ page, onRefresh, graphReady, onExportJson }: { page: PageData 
     <Group justify="space-between" wrap="nowrap" px="xs" py={8} gap={6}>
       <Box style={{ minWidth: 0 }}>
         <Text size="sm" fw={650} truncate>
-          {page?.title || 'Entity Viewer'}
+          {page?.title || 'Schema Breeze'}
         </Text>
         <Text size="xs" c="dimmed" truncate>
           {page?.url ?? ''}
