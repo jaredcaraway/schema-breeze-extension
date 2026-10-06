@@ -25,7 +25,7 @@ Temporary add-ons are removed when Firefox restarts. To install it permanently, 
   - Root entities are drawn bold; `@id`s that are referenced but never defined are drawn dashed.
   - Entities with issues get a red or amber outline.
   - Click a node to open its details and highlight its neighbours.
-  - Export the graph as a PNG.
+  - Export the graph as a PNG. Exports carry a small Schema Breeze badge in a strip below the graph (`src/lib/watermark.ts`); `isPaid()` in `src/lib/plan.ts` turns it off.
 - **Tree:** a collapsible hierarchy starting from the root entities. Cycles are detected and not expanded again.
 - **Issues:** problems grouped by severity. Click one to jump to the entity it belongs to. Checks include:
   - JSON parse errors;
