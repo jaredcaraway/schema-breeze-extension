@@ -40,7 +40,7 @@ export async function originalFrom(tabId: number, url: string, network: boolean)
   return (res?.result as OriginalResult | undefined) ?? { error: 'the page returned no data' };
 }
 
-/** Calls `cb` whenever the active tab in this sidebar's window changes or finishes loading. */
+/** Calls `cb` whenever the active tab in this sidebar's window changes or finishes loading, or a tab in it closes. */
 export function onActivePageChange(cb: () => void): () => void {
   const onActivated = async (info: { windowId: number }) => {
     if (info.windowId === (await myWindowId())) cb();
@@ -48,11 +48,17 @@ export function onActivePageChange(cb: () => void): () => void {
   const onUpdated = async (_id: number, change: { status?: string; url?: string }, tab: { active: boolean; windowId: number }) => {
     if (tab.active && tab.windowId === (await myWindowId()) && (change.status === 'complete')) cb();
   };
+  // A closed pinned tab changes what the "open on another tab" screen offers.
+  const onRemoved = async (_id: number, info: { windowId: number; isWindowClosing: boolean }) => {
+    if (!info.isWindowClosing && info.windowId === (await myWindowId())) cb();
+  };
   api.tabs.onActivated.addListener(onActivated);
   api.tabs.onUpdated.addListener(onUpdated);
+  api.tabs.onRemoved.addListener(onRemoved);
   return () => {
     api.tabs.onActivated.removeListener(onActivated);
     api.tabs.onUpdated.removeListener(onUpdated);
+    api.tabs.onRemoved.removeListener(onRemoved);
   };
 }
 
@@ -69,3 +75,20 @@ export function download(filename: string, data: Blob | string, type = 'applicat
 }
 
 export const openTab = (url: string) => api.tabs.create({ url });
+
+/** The tab, or undefined once it has been closed. */
+export async function getTab(tabId: number): Promise<{ id: number; url?: string; title?: string } | undefined> {
+  try {
+    return await api.tabs.get(tabId);
+  } catch {
+    return undefined;
+  }
+}
+
+export const focusTab = (tabId: number) => api.tabs.update(tabId, { active: true });
+
+/** Must be called synchronously from a click handler (user gesture). */
+export function closeSidebar() {
+  if (api.sidebarAction) api.sidebarAction.close();
+  else window.close(); // Chrome side panel
+}
