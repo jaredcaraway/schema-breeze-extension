@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActionIcon, Badge, Box, Button, Center, Drawer, Group, Loader, Menu, ScrollArea, Stack, Tabs, Text, ThemeIcon,
+  ActionIcon, Badge, Box, Button, Center, Drawer, Group, Loader, Menu, ScrollArea, Stack, Switch, Tabs, Text, ThemeIcon,
   Tooltip, useMantineColorScheme, useComputedColorScheme,
 } from '@mantine/core';
 import {
   IconAlertTriangle, IconBinaryTree2, IconBraces, IconChecklist, IconDownload, IconExternalLink, IconGraph, IconLock, IconMoon,
-  IconRefresh, IconSun, IconWorldOff,
+  IconPinned, IconRefresh, IconSettings, IconSun, IconWorldOff,
 } from '@tabler/icons-react';
 import { buildGraph, toJsonLd } from './lib/graph';
 import type { PageData, Severity, Source } from './lib/types';
-import { activeTab, BROWSER_NAME, download, extractFrom, hasHostPermission, IN_EXTENSION, onActivePageChange, openTab, originalFrom, requestHostPermission } from './lib/browser';
+import {
+  activeTab, BROWSER_NAME, closeSidebar, download, extractFrom, focusTab, getTab, hasHostPermission, IN_EXTENSION, onActivePageChange,
+  openTab, originalFrom, requestHostPermission,
+} from './lib/browser';
+import { readFollow, resolveTab, writeFollow } from './lib/pin';
 import { classifyOrigins } from './lib/provenance';
 import { GraphView } from './components/GraphView';
 import { TreeView } from './components/TreeView';
@@ -18,7 +22,7 @@ import { RawView, SOURCE_COLOR } from './components/RawView';
 import { EntityDetail, TypeBadges } from './components/EntityDetail';
 import { DEMO_PAGE } from './demo';
 
-type Status = 'loading' | 'ready' | 'permission' | 'restricted' | 'error';
+type Status = 'loading' | 'ready' | 'permission' | 'restricted' | 'error' | 'elsewhere';
 const RANK: Record<Severity, number> = { error: 3, warning: 2, info: 1 };
 /** Height of the entity drawer. It floats over the tab content, so the scrolling views pad by this much while it's open. */
 const DRAWER_SIZE = '62vh';
@@ -36,6 +40,11 @@ export function App() {
   /** Set when the page's HTML isn't cached; fetching it again needs a click. */
   const [originFetch, setOriginFetch] = useState<(() => void) | undefined>();
   const loads = useRef(0);
+  /** The tab this sidebar reads. Set on the first load; moves only when following or on "Read this tab". */
+  const pinned = useRef<number | undefined>(undefined);
+  const [follow, setFollow] = useState(readFollow);
+  /** The pinned tab, shown while another tab is active; null once it has been closed. */
+  const [pinnedTab, setPinnedTab] = useState<{ id: number; label: string } | null>(null);
 
   /** Compares the scanned blocks with the HTML the server sent, to tell server-rendered blocks from injected ones. */
   const compareOrigins = useCallback(async (seq: number, tabId: number, data: PageData, network: boolean) => {
@@ -74,6 +83,16 @@ export function App() {
     }
     setStatus('loading');
     const t = await activeTab();
+    const target = resolveTab(t?.id, pinned.current, follow);
+    pinned.current = target.pinned;
+    if (t && target.read === undefined) {
+      const other = await getTab(target.pinned!);
+      if (seq !== loads.current) return;
+      setPage(null);
+      setPinnedTab(other ? { id: other.id, label: other.title || other.url || 'another tab' } : null);
+      setStatus('elsewhere');
+      return;
+    }
     if (!t || !/^https?:/i.test(t.url ?? '')) {
       setPage(null);
       setStatus('restricted');
@@ -97,7 +116,12 @@ export function App() {
       return;
     }
     if (data.blocks.some((b) => b.source === 'json-ld')) await compareOrigins(seq, t.id, data, false);
-  }, [compareOrigins]);
+  }, [compareOrigins, follow]);
+
+  const readThisTab = useCallback(() => {
+    pinned.current = undefined;
+    load();
+  }, [load]);
 
   useEffect(() => {
     load();
@@ -141,7 +165,17 @@ export function App() {
 
   return (
     <Stack gap={0} h="100vh">
-      <Header page={page} onRefresh={load} graphReady={!!graph} onExportJson={() => graph && download(`${fileStem}-entities.jsonld`, JSON.stringify(toJsonLd(graph), null, 2))} />
+      <Header
+        page={page}
+        onRefresh={load}
+        graphReady={!!graph}
+        onExportJson={() => graph && download(`${fileStem}-entities.jsonld`, JSON.stringify(toJsonLd(graph), null, 2))}
+        follow={follow}
+        onFollowChange={(on) => {
+          writeFollow(on);
+          setFollow(on);
+        }}
+      />
 
       {status === 'loading' && (
         <Center flex={1}>
@@ -165,6 +199,29 @@ export function App() {
           >
             Grant access to websites
           </Button>
+        </Empty>
+      )}
+
+      {status === 'elsewhere' && (
+        <Empty icon={<IconPinned size={22} />} title="Open on another tab">
+          <Text size="sm" c="dimmed" ta="center">
+            {pinnedTab ? <>Schema Breeze is reading “{pinnedTab.label}”.</> : 'The tab Schema Breeze was opened on is closed.'} To switch tabs
+            automatically, turn on Follow the active tab in settings.
+          </Text>
+          <Group gap="xs" justify="center">
+            <Button size="xs" onClick={readThisTab}>
+              Read this tab
+            </Button>
+            {pinnedTab && (
+              <Button size="xs" variant="light" onClick={() => focusTab(pinnedTab.id)}>
+                Back to that tab
+              </Button>
+            )}
+            {/* Must be called synchronously in the click handler. */}
+            <Button size="xs" variant="subtle" color="gray" onClick={closeSidebar}>
+              Close sidebar
+            </Button>
+          </Group>
         </Empty>
       )}
 
@@ -317,7 +374,14 @@ export function App() {
   );
 }
 
-function Header({ page, onRefresh, graphReady, onExportJson }: { page: PageData | null; onRefresh: () => void; graphReady: boolean; onExportJson: () => void }) {
+function Header({ page, onRefresh, graphReady, onExportJson, follow, onFollowChange }: {
+  page: PageData | null;
+  onRefresh: () => void;
+  graphReady: boolean;
+  onExportJson: () => void;
+  follow: boolean;
+  onFollowChange: (on: boolean) => void;
+}) {
   const { setColorScheme } = useMantineColorScheme();
   const scheme = useComputedColorScheme('light');
   const enc = encodeURIComponent(page?.url ?? '');
@@ -362,6 +426,24 @@ function Header({ page, onRefresh, graphReady, onExportJson }: { page: PageData 
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
+        {IN_EXTENSION && (
+          <Menu position="bottom-end" withinPortal shadow="md" closeOnItemClick={false}>
+            <Menu.Target>
+              <ActionIcon aria-label="Settings">
+                <IconSettings size={16} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown p="xs" maw={240}>
+              <Switch
+                size="xs"
+                label="Follow the active tab"
+                description="Read each tab you switch to. When off, the sidebar stays on the tab it was opened on."
+                checked={follow}
+                onChange={(e) => onFollowChange(e.currentTarget.checked)}
+              />
+            </Menu.Dropdown>
+          </Menu>
+        )}
         <Tooltip label="Toggle theme">
           <ActionIcon aria-label="Toggle theme" onClick={() => setColorScheme(scheme === 'dark' ? 'light' : 'dark')}>
             {scheme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
